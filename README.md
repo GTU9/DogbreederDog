@@ -90,12 +90,12 @@
 
 
 # 시스템 아키텍처
-![Image](https://github.com/user-attachments/assets/089a6aac-f109-4953-a891-43d8ea3fe077) 
+![Image](img/시스템아키텍처.png) 
 
 # WBS
+![Image](img/wbs.png)
 
 <figure  style="text-align: center;">
-<img src="https://media.discordapp.net/attachments/1368557343834509486/1372390016927666176/image.png?ex=6826994d&is=682547cd&hm=fb96ae63a0ba19550285d3da55fab0a6819d6a4544bc9bca4b21a3c607f82c06&=&format=webp&quality=lossless&width=3104&height=670">
 <figcaption></figcaption>
 </figure>
 
@@ -268,9 +268,7 @@ Huggingface의 leader board 중 성능,속도를 비교 후 수집한 데이터�
 
 # 수행결과
 
-<img src="https://media.discordapp.net/attachments/1368557343834509486/1372187612944535642/image.png?ex=6825dccc&is=68248b4c&hm=33b92b4f178dd791beed1a9014ae9716920e9409a142f9d5aff6db53a0a430a7&=&format=webp&quality=lossless&width=2610&height=1552">
-
-<img src="https://media.discordapp.net/attachments/1368557343834509486/1372187649091043390/image.png?ex=6825dcd5&is=68248b55&hm=882b73ce9dc42c9e59149a6ef0584188e6a485231ce5e804f2342226c4ce2524&=&format=webp&quality=lossless&width=2610&height=1552">
+![Image](img/테스트_우리강아지가자꾸벽지를긁어요.png)
 
 <br>
 
