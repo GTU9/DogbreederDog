@@ -1,5 +1,3 @@
-# 3rd-project
-
 # 팀명 : 개 잘키우개
 
 # 👨‍💻팀원 소개
@@ -251,7 +249,6 @@ Huggingface의 leader board 중 성능,속도를 비교 후 수집한 데이터�
   <img src="https://github.com/user-attachments/assets/72e8d15a-7991-44df-8d3f-4381dfd6fa34" width="45%" />
   <img src="https://github.com/user-attachments/assets/62b4f76f-17ac-4b17-b7b7-1489b10c7072" width="45%" />
 </div>
-<img src="https://cdn.discordapp.com/attachments/1368557343834509486/1372172819911282808/image.png?ex=6825cf06&is=68247d86&hm=c26146a28c2e4954e53c712222c58442682cf471f08e91faacd59cb36cbaab7e&">
 
 - BAAI/bge-m3 모델 사용 시 실행 결과(LLM 모델 : gpt-4o-mini)
 
