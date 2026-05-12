@@ -1,0 +1,43 @@
+# =============================================================================
+# Streamlit RAG 챗봇 (app.py, py_file/QA_bot.py, llm/call_llm.py)
+# =============================================================================
+streamlit>=1.28.0,<2
+python-dotenv>=1.0.0
+openai>=1.30.0,<2
+
+# 현재 코드의 import 경로(langchain.vectorstores.FAISS 등)와 맞춘 조합
+langchain==0.1.20
+langchain-community==0.0.38
+
+faiss-cpu>=1.8.0
+sentence-transformers>=2.6.0
+tiktoken>=0.7.0
+
+# bge-m3 및 sentence-transformers용 (CUDA 환경이면 pytorch.org 안내에 따라 torch 설치)
+torch>=2.0.0
+
+# =============================================================================
+# Kinship 크롤링 (py_file/crawling/crawling_kinship.py)
+# =============================================================================
+# selenium>=4.15.0
+# beautifulsoup4>=4.12.0
+# requests>=2.31.0
+# webdriver-manager>=4.0.0
+
+# =============================================================================
+# Chroma 실험 (py_file/use_vectordb/create_chromadb.py)
+# =============================================================================
+# chromadb>=0.4.0
+
+# =============================================================================
+# 유튜브 다운로드 + Whisper 전사 (py_file/preparing_data/preparing_dog_youtube_data.py)
+# — FFmpeg는 OS에 별도 설치. GPU 사용 시 CUDA 가능한 torch 권장.
+# =============================================================================
+# yt-dlp>=2024.3.10
+# openai-whisper>=20231117
+
+# =============================================================================
+# 노트북 (py_file/test.ipynb, py_file/fine_tuning/fine_tuning.ipynb)
+# =============================================================================
+# jupyter>=1.0.0
+# ipykernel>=6.25.0
