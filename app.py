@@ -9,6 +9,7 @@ from py_file.QA_bot import (
 import base64
 import random
 import re
+import html as html_mod
 
 # 페이지 설정
 st.set_page_config(page_title="🐾개잘키우개🐾", layout="wide")
@@ -17,59 +18,137 @@ st.set_page_config(page_title="🐾개잘키우개🐾", layout="wide")
 st.markdown(
     """
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700&display=swap');
+
+    /* ── 전체 배경 ── */
     .stApp {
         background-color: #fff8ed;
         color: #333333;
     }
+
+    /* ── 채팅 콘텐츠 최대 너비 제한 (가독성) ── */
+    [data-testid="stMainBlockContainer"] {
+        max-width: 860px !important;
+        margin: 0 auto !important;
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+    }
+
+    /* ── 채팅 타이틀 ── */
+    h1 {
+        font-family: 'Nanum Gothic', sans-serif !important;
+        font-size: 1.6rem !important;
+        color: #5c3d2e !important;
+        padding-bottom: 12px !important;
+        border-bottom: 2px solid #e8d8c4 !important;
+        margin-bottom: 24px !important;
+    }
+
+    /* ── 말풍선 공통 ── */
     .bubble {
         display: inline-block;
-        padding: 12px 16px;
-        margin-bottom: 10px;
-        border-radius: 20px;
-        font-size: 16px;
-        max-width: fit-content;
+        padding: 13px 18px;
+        margin-bottom: 6px;
+        border-radius: 18px;
+        font-size: 15px;
+        line-height: 1.7;
+        max-width: 72%;
         white-space: pre-wrap;
         word-break: break-word;
         font-family: 'Nanum Gothic', sans-serif;
         position: relative;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.07);
     }
+
+    /* ── 봇 말풍선 (좌) ── */
     .left {
         background-color: #f5f0eb;
-        color: #000000;
+        color: #2d2d2d;
         margin-right: auto;
+        border-bottom-left-radius: 4px;
+        border: 1px solid #e8ddd4;
     }
+
+    /* ── 유저 말풍선 (우) ── */
     .right {
         background-color: #a88f7f;
-        color: white;
+        color: #ffffff;
         margin-left: auto;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 2px 10px rgba(168,143,127,0.35);
     }
+
+    /* ── 강아지 오버레이 캐릭터 ── */
     .character {
-        width: 50px;
+        width: 46px;
         position: absolute;
-        top: -30px;
-        left: -10px;
+        top: -28px;
+        left: -8px;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
     }
     .character.user {
         left: auto;
-        right: -10px;
+        right: -8px;
     }
+
+    /* ── 채팅 행 래퍼 ── */
     .chat-line {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
         position: relative;
-        margin-bottom: 40px;
+        margin-bottom: 36px;
     }
     .chat-line.user {
         align-items: flex-end;
     }
-    input[type="text"] {
-        background-color: #fffaf3;
-        color: #333;
-        border-radius: 18px;
-        padding: 10px;
-        font-size: 16px;
+
+    /* ── 링크 색상 (참고 문서) ── */
+    .bubble a {
+        color: #7c5c4a;
+        text-decoration: underline;
     }
+    .right a {
+        color: #f0e0d6;
+    }
+
+    /* ── 입력창 ── */
+    [data-testid="stChatInput"] textarea {
+        background-color: #fffaf3 !important;
+        border-radius: 24px !important;
+        border: 1.5px solid #d9c4b0 !important;
+        font-family: 'Nanum Gothic', sans-serif !important;
+        font-size: 15px !important;
+        color: #333 !important;
+        padding: 12px 20px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+        transition: border-color 0.2s !important;
+    }
+    [data-testid="stChatInput"] textarea:focus {
+        border-color: #a88f7f !important;
+        outline: none !important;
+    }
+
+    /* ── 사이드바 ── */
+    [data-testid="stSidebar"] {
+        background-color: #fdf3e3 !important;
+        border-right: 1px solid #e8d8c4 !important;
+    }
+    [data-testid="stSidebar"] h2 {
+        color: #5c3d2e !important;
+        font-family: 'Nanum Gothic', sans-serif !important;
+    }
+    [data-testid="stSidebar"] p {
+        color: #7a5c48 !important;
+        font-size: 13px !important;
+        line-height: 1.6 !important;
+    }
+
+    /* ── 스크롤바 ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #fff8ed; }
+    ::-webkit-scrollbar-thumb { background: #d9c4b0; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a88f7f; }
     </style>
 """,
     unsafe_allow_html=True,
@@ -94,30 +173,12 @@ bot_profile_b64s = [
     img_to_b64(".streamlit/data/png/bot5.png"),
 ]
 
-# 배경음악
-file_path = ".streamlit/data/mp3/bgm.mp3"
-
-
-def get_audio_base64(file_path):
-    with open(file_path, "rb") as f:
-        return base64.b64encode(f.read()).decode()
-
-
-st.markdown(
-    f"""
-    <audio autoplay loop>
-        <source src="data:audio/mp3;base64,{get_audio_base64(file_path)}" type="audio/mp3">
-    </audio>
-""",
-    unsafe_allow_html=True,
-)
-
 # 세션 초기화
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # 사이드바
-st.sidebar.image(".streamlit/data/png/logo.png", use_container_width=True)
+st.sidebar.image(".streamlit/data/png/Logo.png", use_container_width=True)
 st.sidebar.title("🐶 반려견 채팅")
 st.sidebar.write("반려견 전문가 채팅입니다. 궁금한 점을 입력해보세요!")
 
@@ -137,36 +198,42 @@ with st.container():
 
             content = re.sub(r"[\ud800-\udfff]", "", content)
 
+        escaped_content = html_mod.escape(content)
+
         if role == "user":
             profile_b64 = user_profile_b64
             overlay_b64 = user_dog_b64
             bubble_class = "right"
             chat_line_class = "chat-line user"
-            profile_margin = "margin-left: 10px;"
             character_position = "character user"
-            direction = "flex-direction: row-reverse;"
+            html_block = f"""
+            <div style="display: flex; justify-content: flex-end; align-items: flex-start; margin-bottom: 30px;">
+                <div class="{chat_line_class}">
+                    <img src="data:image/png;base64,{overlay_b64}" class="{character_position}">
+                    <div class="bubble {bubble_class}">{escaped_content}</div>
+                </div>
+                <img src="data:image/png;base64,{profile_b64}"
+                     style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-left: 10px; flex-shrink: 0;">
+            </div>
+            """
         else:
             profile_b64 = random.choice(bot_profile_b64s)
             overlay_b64 = ai_dog_b64
             bubble_class = "left"
             chat_line_class = "chat-line"
-            profile_margin = "margin-right: 10px;"
             character_position = "character"
-            direction = ""
-
-        st.markdown(
-            f"""
-            <div style="display: flex; align-items: flex-start; margin-bottom: 30px; {direction}">
+            html_block = f"""
+            <div style="display: flex; align-items: flex-start; margin-bottom: 30px;">
                 <img src="data:image/png;base64,{profile_b64}"
-                     style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; {profile_margin}">
+                     style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 10px; flex-shrink: 0;">
                 <div class="{chat_line_class}">
                     <img src="data:image/png;base64,{overlay_b64}" class="{character_position}">
-                    <div class="bubble {bubble_class}">{content}</div>
+                    <div class="bubble {bubble_class}">{escaped_content}</div>
                 </div>
             </div>
-        """,
-            unsafe_allow_html=True,
-        )
+            """
+
+        st.markdown(html_block, unsafe_allow_html=True)
 
 
 # 입력 받기
