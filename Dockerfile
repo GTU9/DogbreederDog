@@ -10,9 +10,12 @@ RUN apt-get update && apt-get install -y \
 # requirements 먼저 복사 (레이어 캐시 활용)
 COPY requirements.txt .
 
-# NAS 환경(CPU only) - torch CPU 버전으로 설치
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-RUN pip install --no-cache-dir -r requirements.txt
+# 1단계: requirements.txt 설치 (torch 제외 - 아래에서 별도 설치)
+RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+
+# 2단계: NAS(CPU only) - requirements.txt의 torch를 덮어써서 v2.6+ 보장
+RUN pip install --no-cache-dir torch==2.6.0+cpu torchvision==0.21.0+cpu \
+    --index-url https://download.pytorch.org/whl/cpu
 
 # 앱 소스 복사 (models/, testvenv/ 제외는 .dockerignore에서 처리)
 COPY . .

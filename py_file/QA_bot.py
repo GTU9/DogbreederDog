@@ -135,19 +135,19 @@ def title_case_excluding_prepositions(text):
     return " ".join(result)
 
 
-# 사용자 질문 테스트
-query_ko = "왜 내 개가 바닥을 핥을까?"
-query_en = gpt_translate_ko_to_en(query_ko)
-query = title_case_excluding_prepositions(query_en)
+if __name__ == "__main__":
+    # 사용자 질문 테스트
+    query_ko = "왜 내 개가 바닥을 핥을까?"
+    query_en = gpt_translate_ko_to_en(query_ko)
+    query = title_case_excluding_prepositions(query_en)
 
-# query_en = gpt_translate_ko_to_en(query_ko)
-result = qa_chain(query)
+    result = qa_chain(query)
 
-# 출력
-print("질문:", query)
-print("답변:\n", result["result"])
+    # 출력
+    print("질문:", query)
+    print("답변:\n", result["result"])
 
-# 참고 문서 URL 출력
-print("\n참고 문서 URL:")
-for i, doc in enumerate(result["source_documents"], 1):
-    print(f"{i}. {doc.metadata.get('source', 'URL 없음')}")
+    # 참고 문서 URL 출력
+    print("\n참고 문서 URL:")
+    for i, doc in enumerate(result["source_documents"], 1):
+        print(f"{i}. {doc.metadata.get('source', 'URL 없음')}")
