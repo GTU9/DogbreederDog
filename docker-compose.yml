@@ -3,7 +3,8 @@ services:
   # ── Streamlit 앱 ─────────────────────────────────────────────────
   dogbreeder-app:
     build: .
-    container_name: dogbreeder-app
+    container_name: dogbreederdog
+    image: gtu9/dogbreederdog:latest
     ports:
       - "${APP_PORT:-8502}:${APP_PORT:-8502}"
     environment:
