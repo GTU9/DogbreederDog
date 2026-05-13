@@ -1,8 +1,36 @@
+# 가상환경
 testvenv/
+
+# 모델 캐시 (볼륨 마운트로 대체)
 models/
+
+# 데이터 (볼륨 마운트로 대체)
+data/
+
+# 데이터 준비 / 크롤링 / 파인튜닝 스크립트
+py_file/crawling/
+py_file/fine_tuning/
+py_file/preparing_data/
+py_file/use_vectordb/
+
+# Python 캐시
 __pycache__/
 *.pyc
 *.pyo
+
+# 환경변수
 .env
+
+# Git
 .git/
+.gitignore
+
+# 주피터 노트북
 *.ipynb
+
+# Docker
+.dockerignore
+docker-compose.yml
+
+# 예시 파일
+.env.example

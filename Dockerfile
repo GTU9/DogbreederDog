@@ -20,9 +20,15 @@ RUN pip install --no-cache-dir torch==2.6.0+cpu torchvision==0.21.0+cpu \
 # 앱 소스 복사 (models/, testvenv/ 제외는 .dockerignore에서 처리)
 COPY . .
 
-EXPOSE 8502
+ARG APP_PORT=8502
+ARG BASE_PATH=dogbreeder
+ENV APP_PORT=${APP_PORT}
+ENV BASE_PATH=${BASE_PATH}
 
-CMD ["python", "-m", "streamlit", "run", "app.py", \
-     "--server.port=8502", \
-     "--server.address=0.0.0.0", \
-     "--server.headless=true"]
+EXPOSE ${APP_PORT}
+
+CMD ["sh", "-c", "python -m streamlit run app.py \
+     --server.port=${APP_PORT} \
+     --server.baseUrlPath=${BASE_PATH} \
+     --server.address=0.0.0.0 \
+     --server.headless=true"]
