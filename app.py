@@ -8,6 +8,17 @@ from py_file.QA_bot import (
 )
 import base64
 import random
+import logging
+import os
+
+# 로거 설정 (우리 앱 로그만)
+os.makedirs("data/logs", exist_ok=True)
+logger = logging.getLogger("dogbreeder")
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    handler = logging.FileHandler("data/logs/chat.log", encoding="utf-8")
+    handler.setFormatter(logging.Formatter("%(asctime)s | %(message)s"))
+    logger.addHandler(handler)
 import re
 import html as html_mod
 
@@ -247,6 +258,7 @@ def escape_single_tilde(text):
 user_input = st.chat_input("질문을 입력하세요...")
 
 if user_input:
+    logger.info(f"질문: {user_input}")
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     with st.spinner("답변 생성 중..."):
@@ -267,6 +279,7 @@ if user_input:
             result["result"] = escape_single_tilde(result["result"])
 
         answer = result["result"]
+        logger.info(f"답변: {answer[:100]}{'...' if len(answer) > 100 else ''}")
 
         # 참고 문서 정리
         source_info = ""

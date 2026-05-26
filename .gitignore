@@ -9,3 +9,6 @@ data/ksi/Audio/*.mp3
 chroma_db
 crawling_kinship.ipynb
 .env
+
+.claude/settings.local.json
+.omc/
