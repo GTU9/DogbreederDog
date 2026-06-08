@@ -2,14 +2,16 @@
 import streamlit as st
 import streamlit.components.v1 as components
 from py_file.QA_bot import (
-    qa_chain,
-    gpt_translate_ko_to_en,
-    title_case_excluding_prepositions,
+    build_resources,
+    answer_stream,
+    to_lc_history,
 )
 import base64
 import random
 import logging
 import os
+import re
+import html as html_mod
 
 # 로거 설정 (우리 앱 로그만)
 os.makedirs("data/logs", exist_ok=True)
@@ -19,8 +21,6 @@ if not logger.handlers:
     handler = logging.FileHandler("data/logs/chat.log", encoding="utf-8")
     handler.setFormatter(logging.Formatter("%(asctime)s | %(message)s"))
     logger.addHandler(handler)
-import re
-import html as html_mod
 
 # 페이지 설정
 st.set_page_config(page_title="🐾개잘키우개🐾", layout="wide")
@@ -184,6 +184,79 @@ bot_profile_b64s = [
     img_to_b64(".streamlit/data/png/bot5.png"),
 ]
 
+
+# T1-1: 무거운 임베딩/FAISS/LLM 리소스를 1회만 로드하고 캐싱
+@st.cache_resource(show_spinner="🐶 모델을 불러오는 중...")
+def get_resources():
+    return build_resources()
+
+
+resources = get_resources()
+
+
+# ── 렌더링 헬퍼 ───────────────────────────────────────────────────
+def _clean(content):
+    """surrogate 유니코드 제거 후 HTML 이스케이프."""
+    try:
+        content = content.encode("utf-16", "surrogatepass").decode("utf-16")
+    except Exception:
+        content = re.sub(r"[\ud800-\udfff]", "", content)
+    return html_mod.escape(content)
+
+
+def escape_single_tilde(text):
+    if not isinstance(text, str):
+        return text
+    # ~텍스트~ => &#126;텍스트&#126;
+    return re.sub(r"~(.*?)~", r"&#126;\1&#126;", text)
+
+
+def user_bubble_html(content):
+    esc = _clean(content)
+    return f"""
+    <div style="display: flex; justify-content: flex-end; align-items: flex-start; margin-bottom: 30px;">
+        <div class="chat-line user">
+            <img src="data:image/png;base64,{user_dog_b64}" class="character user">
+            <div class="bubble right">{esc}</div>
+        </div>
+        <img src="data:image/png;base64,{user_profile_b64}"
+             style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-left: 10px; flex-shrink: 0;">
+    </div>
+    """
+
+
+def bot_bubble_html(content, profile_b64=None):
+    esc = _clean(content)
+    profile_b64 = profile_b64 if profile_b64 is not None else random.choice(bot_profile_b64s)
+    return f"""
+    <div style="display: flex; align-items: flex-start; margin-bottom: 30px;">
+        <img src="data:image/png;base64,{profile_b64}"
+             style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 10px; flex-shrink: 0;">
+        <div class="chat-line">
+            <img src="data:image/png;base64,{ai_dog_b64}" class="character">
+            <div class="bubble left">{esc}</div>
+        </div>
+    </div>
+    """
+
+
+def format_sources(docs):
+    """출처 문서를 중복 제거해 표시용 마크다운 블록으로 구성."""
+    unique_sources, source_list = set(), []
+    for doc in docs:
+        src = doc.metadata.get("source", "").strip()
+        if src and src.lower() != "none" and src not in unique_sources:
+            unique_sources.add(src)
+            source_list.append(src)
+
+    if not source_list:
+        return ""
+    block = "\n\n📚 **참고 문서:**\n"
+    for i, src in enumerate(source_list, 1):
+        block += f"{i}. {src}\n"
+    return block
+
+
 # 세션 초기화
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -198,106 +271,44 @@ st.title("🐶💬개 잘키우개")
 # 메시지 출력
 with st.container():
     for msg in st.session_state.messages:
-        role = msg["role"]
-        content = msg["content"]
-
-        # surrogate 유니코드 제거
-        try:
-            content = content.encode("utf-16", "surrogatepass").decode("utf-16")
-        except:
-            import re
-
-            content = re.sub(r"[\ud800-\udfff]", "", content)
-
-        escaped_content = html_mod.escape(content)
-
-        if role == "user":
-            profile_b64 = user_profile_b64
-            overlay_b64 = user_dog_b64
-            bubble_class = "right"
-            chat_line_class = "chat-line user"
-            character_position = "character user"
-            html_block = f"""
-            <div style="display: flex; justify-content: flex-end; align-items: flex-start; margin-bottom: 30px;">
-                <div class="{chat_line_class}">
-                    <img src="data:image/png;base64,{overlay_b64}" class="{character_position}">
-                    <div class="bubble {bubble_class}">{escaped_content}</div>
-                </div>
-                <img src="data:image/png;base64,{profile_b64}"
-                     style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-left: 10px; flex-shrink: 0;">
-            </div>
-            """
+        if msg["role"] == "user":
+            st.markdown(user_bubble_html(msg["content"]), unsafe_allow_html=True)
         else:
-            profile_b64 = random.choice(bot_profile_b64s)
-            overlay_b64 = ai_dog_b64
-            bubble_class = "left"
-            chat_line_class = "chat-line"
-            character_position = "character"
-            html_block = f"""
-            <div style="display: flex; align-items: flex-start; margin-bottom: 30px;">
-                <img src="data:image/png;base64,{profile_b64}"
-                     style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 10px; flex-shrink: 0;">
-                <div class="{chat_line_class}">
-                    <img src="data:image/png;base64,{overlay_b64}" class="{character_position}">
-                    <div class="bubble {bubble_class}">{escaped_content}</div>
-                </div>
-            </div>
-            """
-
-        st.markdown(html_block, unsafe_allow_html=True)
+            st.markdown(bot_bubble_html(msg["content"]), unsafe_allow_html=True)
 
 
 # 입력 받기
-def escape_single_tilde(text):
-    if not isinstance(text, str):
-        return text
-    # ~텍스트~ => &#126;텍스트&#126;
-    return re.sub(r"~(.*?)~", r"&#126;\1&#126;", text)
-
-
 user_input = st.chat_input("질문을 입력하세요...")
 
 if user_input:
     logger.info(f"질문: {user_input}")
+
+    # 대화 맥락(현재 입력은 제외하고 직전까지) → langchain 메시지
+    chat_history = to_lc_history(st.session_state.messages)
+
+    # 사용자 메시지 저장 + 즉시 렌더(스트리밍 중에도 보이도록)
     st.session_state.messages.append({"role": "user", "content": user_input})
+    st.markdown(user_bubble_html(user_input), unsafe_allow_html=True)
 
-    with st.spinner("답변 생성 중..."):
-        result_temp_raw = qa_chain(user_input)
+    # 1) 검색(필요 시 교차언어) — 답변 LLM 호출은 이후 1회뿐
+    with st.spinner("관련 문서를 찾는 중..."):
+        docs, stream = answer_stream(user_input, chat_history, resources)
 
-        sources = result_temp_raw.get("source_documents", [])
-        first_source = sources[0].metadata.get("source", "") if sources else ""
+    # 2) 답변 스트리밍(커스텀 말풍선 유지, T1-5)
+    placeholder = st.empty()
+    bot_profile = random.choice(bot_profile_b64s)
+    acc = ""
+    for chunk in stream:
+        acc += chunk
+        placeholder.markdown(
+            bot_bubble_html(escape_single_tilde(acc), profile_b64=bot_profile),
+            unsafe_allow_html=True,
+        )
 
-        if first_source.startswith("https://www.kinship.com"):
-            query_en = gpt_translate_ko_to_en(user_input)
-            query_title_case = title_case_excluding_prepositions(query_en)
-            result = qa_chain(query_title_case)
-        else:
-            result = result_temp_raw
+    answer = escape_single_tilde(acc)
+    logger.info(f"답변: {answer[:100]}{'...' if len(answer) > 100 else ''}")
 
-        # ✅ 여기에서 result["result"]에 대해 escape 적용
-        if "result" in result:
-            result["result"] = escape_single_tilde(result["result"])
-
-        answer = result["result"]
-        logger.info(f"답변: {answer[:100]}{'...' if len(answer) > 100 else ''}")
-
-        # 참고 문서 정리
-        source_info = ""
-        unique_sources = set()
-        source_list = []
-
-        for doc in result.get("source_documents", []):
-            src = doc.metadata.get("source", "").strip()
-            if src and src.lower() != "none" and src not in unique_sources:
-                unique_sources.add(src)
-                source_list.append(src)
-
-        if source_list:
-            source_info += "\n\n📚 **참고 문서:**\n"
-            for i, src in enumerate(source_list, 1):
-                source_info += f"{i}. {src}\n"
-
-        answer_with_sources = answer + source_info
-
+    # 3) 출처 정리 후 최종 메시지 저장
+    answer_with_sources = answer + format_sources(docs)
     st.session_state.messages.append({"role": "bot", "content": answer_with_sources})
     st.rerun()
