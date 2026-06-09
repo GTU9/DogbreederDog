@@ -15,6 +15,12 @@ faiss-cpu>=1.8.0
 sentence-transformers>=2.6.0
 tiktoken>=0.7.0
 
+# T2-1: 하이브리드 검색(BM25 + dense) — BM25Retriever 런타임 의존성
+rank-bm25>=0.2.2
+# 리랭커(cross-encoder, BAAI/bge-reranker-v2-m3)는 sentence-transformers/torch로 동작.
+#   환경변수 토글: USE_HYBRID / USE_RERANKER (기본 1) / RERANKER_MODEL.
+#   모델/의존성 부재 시 dense-only 로 자동 폴백.
+
 # bge-m3 및 sentence-transformers용 (CUDA 환경이면 pytorch.org 안내에 따라 torch 설치)
 torch>=2.0.0
 
@@ -37,6 +43,12 @@ torch>=2.0.0
 # =============================================================================
 # yt-dlp>=2024.3.10
 # openai-whisper>=20231117
+
+# =============================================================================
+# T2-2: RAG 자동 평가 하니스 (scripts/eval_ragas.py) — 개발/평가용(서빙엔 불필요)
+# =============================================================================
+# ragas>=0.1.0,<0.2
+# datasets>=2.14.0
 
 # =============================================================================
 # 노트북 (py_file/test.ipynb, py_file/fine_tuning/fine_tuning.ipynb)

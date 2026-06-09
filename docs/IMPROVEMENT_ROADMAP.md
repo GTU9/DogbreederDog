@@ -88,13 +88,16 @@
 
 > **트레이드오프(실제 긴장)**: T1-3(의존성 마이그레이션)과 T1-2(메모리)는 같은 파일을 건드린다. **마이그레이션을 먼저** 하면 메모리 구현을 신 API(`create_retrieval_chain`) 위에 한 번에 작성 → 재작업 회피. 단, 마이그레이션은 회귀 위험이 있으므로 **T0로 평가 하니스(T2-2)의 최소판을 먼저 깔고** 진행하는 것을 권장(아래 시퀀싱 참조).
 
-### T2 — RAG 품질
-| ID | 작업 | 해결 약점 | 노력 |
-|----|------|-----------|------|
-| T2-1 | 검색 고도화: 하이브리드(BM25+dense) + 리랭커(`bge-reranker`), k 튜닝 | W검색 | L |
-| T2-2 | **자동 평가 하니스**(ragas: faithfulness/answer-relevance/context-precision), TC01~05 자동화 | W7 | M |
-| T2-3 | 범위 외 가드레일 + 건강 면책 고지 | W6 | S |
-| T2-4 | 출처 렌더링 개선: 중복 제거 + 제목 기반 클릭 링크 | UX | S |
+### T2 — RAG 품질 — ✅ 구현 완료 (2026-06-08, 런타임/품질 검증 대기)
+| ID | 작업 | 상태 | 구현 위치 |
+|----|------|------|-----------|
+| T2-1 | 검색 고도화: 하이브리드(BM25+dense Ensemble) + 리랭커(`bge-reranker-v2-m3`) | ✅ | `QA_bot.py` `_build_retriever()` — `USE_HYBRID`/`USE_RERANKER` 토글, 부재 시 dense 폴백 |
+| T2-2 | **자동 평가 하니스**(ragas: faithfulness/answer-relevancy/context-precision), TC01~05 | ✅ | `scripts/eval_ragas.py`, `data/eval/testcases.json` (사용자 실행) |
+| T2-3 | 범위 외 가드레일(LLM 분류) + 건강 면책 고지(키워드) | ✅ | `QA_bot.py` `is_in_scope()`/`needs_health_disclaimer()`, `ENABLE_OOS_GUARD` |
+| T2-4 | 출처 렌더링 개선: 중복 제거 + 제목 기반 클릭 링크 | ✅ | `app.py` `build_sources()`/`render_sources()` |
+
+> **T2-1 운영 주의(NAS)**: 리랭커 `bge-reranker-v2-m3`는 추가 **~2.3GB 모델 다운로드 + 상시 RAM**을 요구한다(bge-m3와 별개). NAS RAM이 빠듯하면 `USE_RERANKER=0`(하이브리드만) 또는 `USE_HYBRID=0 USE_RERANKER=0`(dense-only)로 단계적 비활성화 가능. 모델/`rank_bm25` 부재 시 자동으로 dense로 폴백한다.
+> **검증 한계**: BM25/Ensemble 배선과 가드레일·출처 로직은 정적 검증 완료. 리랭커 모델 로딩·검색 품질·ragas 점수는 모델 캐시가 있는 실제 환경에서 측정 필요 → **T2-2 하니스로 before/after 품질 회귀를 반드시 확인**할 것.
 
 ### T3 — 제품 기능
 | ID | 작업 | 해결 약점 | 노력 |

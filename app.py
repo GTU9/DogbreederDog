@@ -5,6 +5,8 @@ from py_file.QA_bot import (
     build_resources,
     answer_stream,
     to_lc_history,
+    needs_health_disclaimer,
+    HEALTH_DISCLAIMER,
 )
 import base64
 import random
@@ -249,21 +251,30 @@ def bot_bubble_html(content, profile_b64=None):
     """
 
 
-def format_sources(docs):
-    """출처 문서를 중복 제거해 표시용 마크다운 블록으로 구성."""
-    unique_sources, source_list = set(), []
+def build_sources(docs):
+    """문서 메타데이터에서 (제목, URL) 출처 목록을 중복 제거해 구성(T2-4)."""
+    seen, out = set(), []
     for doc in docs:
-        src = doc.metadata.get("source", "").strip()
-        if src and src.lower() != "none" and src not in unique_sources:
-            unique_sources.add(src)
-            source_list.append(src)
+        src = (doc.metadata.get("source") or "").strip()
+        title = (doc.metadata.get("title") or "").strip()
+        has_url = bool(src) and src.lower() != "none"
+        key = src if has_url else title
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        out.append((title or src, src if has_url else ""))
+    return out
 
-    if not source_list:
-        return ""
-    block = "\n\n📚 **참고 문서:**\n"
-    for i, src in enumerate(source_list, 1):
-        block += f"{i}. {src}\n"
-    return block
+
+def render_sources(sources):
+    """출처를 제목 기반 클릭 링크로 렌더(T2-4). URL 없으면 텍스트로 표시."""
+    if not sources:
+        return
+    parts = []
+    for title, url in sources:
+        label = (title or "출처").replace("[", "(").replace("]", ")")
+        parts.append(f"[{label}]({url})" if url else label)
+    st.markdown("📚 **참고 문서:** " + "  ·  ".join(parts))
 
 
 # 세션 초기화
@@ -284,6 +295,7 @@ with st.container():
             st.markdown(user_bubble_html(msg["content"]), unsafe_allow_html=True)
         else:
             st.markdown(bot_bubble_html(msg["content"]), unsafe_allow_html=True)
+            render_sources(msg.get("sources"))
 
 
 # 입력 받기
@@ -315,9 +327,21 @@ if user_input:
         )
 
     answer = escape_single_tilde(acc)
+
+    # T2-3: 건강 의심 질문이면 수의사 상담 면책 고지 추가
+    if needs_health_disclaimer(user_input):
+        answer += HEALTH_DISCLAIMER
+        placeholder.markdown(
+            bot_bubble_html(answer, profile_b64=bot_profile),
+            unsafe_allow_html=True,
+        )
+
     logger.info(f"답변: {answer[:100]}{'...' if len(answer) > 100 else ''}")
 
-    # 3) 출처 정리 후 최종 메시지 저장
-    answer_with_sources = answer + format_sources(docs)
-    st.session_state.messages.append({"role": "bot", "content": answer_with_sources})
+    # 3) 출처(제목 링크, T2-4) 렌더 후 최종 메시지 저장
+    sources = build_sources(docs)
+    render_sources(sources)
+    st.session_state.messages.append(
+        {"role": "bot", "content": answer, "sources": sources}
+    )
     st.rerun()
