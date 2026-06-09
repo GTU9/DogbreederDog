@@ -12,3 +12,7 @@ crawling_kinship.ipynb
 
 .claude/settings.local.json
 .omc/
+
+# 테스트 실행 산출물(로그/결과) — 입력 data/eval/testcases.json 은 추적 유지
+data/eval/*.txt
+data/eval/*.csv
