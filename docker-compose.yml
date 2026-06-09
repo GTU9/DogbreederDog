@@ -14,6 +14,8 @@ services:
       - HF_HOME=/app/models
       - TRANSFORMERS_CACHE=/app/models/hub
       - SENTENCE_TRANSFORMERS_HOME=/app/models/hub
+      # 리소스 캐시 TTL: 유휴 시 RAM 해제(NAS 절약). none/0/빈값 → 영구 상주.
+      - RESOURCE_CACHE_TTL=${RESOURCE_CACHE_TTL:-1h}
     volumes:
       - ./models:/app/models
       - ./data:/app/data

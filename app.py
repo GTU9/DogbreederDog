@@ -186,7 +186,16 @@ bot_profile_b64s = [
 
 
 # T1-1: 무거운 임베딩/FAISS/LLM 리소스를 1회만 로드하고 캐싱
-@st.cache_resource(show_spinner="🐶 모델을 불러오는 중...")
+# 캐시 TTL: 유휴 시 메모리 해제(NAS RAM 절약). 기본 1시간, 환경변수 RESOURCE_CACHE_TTL로 조정.
+#   예) "1h", "30m", "2h30m" / "none"·"0"·빈값 → 만료 없이 영구 상주(반응성 우선).
+def _resolve_cache_ttl():
+    raw = os.getenv("RESOURCE_CACHE_TTL", "1h").strip().lower()
+    if raw in ("", "0", "none", "off", "false"):
+        return None
+    return raw
+
+
+@st.cache_resource(ttl=_resolve_cache_ttl(), show_spinner="🐶 모델을 불러오는 중...")
 def get_resources():
     return build_resources()
 

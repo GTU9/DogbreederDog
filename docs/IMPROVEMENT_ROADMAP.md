@@ -78,11 +78,13 @@
 ### T1 — 기반·정합성 (저위험 / 고가치) ⭐ 최우선 — ✅ 구현 완료 (2026-06-08, 런타임 검증 대기)
 | ID | 작업 | 해결 약점 | 상태 | 구현 위치 |
 |----|------|-----------|------|----------------|
-| T1-1 | 임베딩+FAISS+LLM 로드를 `@st.cache_resource`로 래핑 | W3 | ✅ | `app.py` `get_resources()`, `QA_bot.py` `build_resources()` |
+| T1-1 | 임베딩+FAISS+LLM 로드를 `@st.cache_resource`로 래핑 (+ 유휴 시 RAM 해제용 TTL) | W3 | ✅ | `app.py` `get_resources()`, `QA_bot.py` `build_resources()` |
 | T1-2 | **대화 메모리 도입** (history-aware 질문 재작성 + 세션 히스토리 전달) | W1 | ✅ | `QA_bot.py` `contextualize_question()`/`to_lc_history()`, `app.py` |
 | T1-3 | LangChain import 마이그레이션(`langchain.*` → `langchain_community.*`/`langchain_core.*`) | W2 | ✅ | `QA_bot.py:1-9` (후속: `langchain-openai`/`-huggingface`) |
 | T1-4 | 번역 경로 단일화(영어 출처일 때만 추가 검색, 답변 생성 1회) | W4 | ✅ | `QA_bot.py` `adaptive_retrieve()`/`answer_stream()` |
 | T1-5 | 스트리밍 응답(커스텀 말풍선 유지) | W5 | ✅ | `app.py` `st.empty()` + `answer_chain.stream()` |
+
+> **운영 메모 — 리소스 캐시 TTL (NAS)**: bge-m3 가중치 + FAISS 인덱스는 한 번 로드되면 프로세스가 살아있는 동안 RAM에 **상시 상주**(~2–4GB baseline). NAS RAM이 빠듯한 환경을 위해 `@st.cache_resource(ttl=...)`로 **유휴 시 메모리 해제**를 선택할 수 있게 한다. 기본값 `1h`(마지막 사용 후 1시간 유휴 시 해제), 환경변수 `RESOURCE_CACHE_TTL`로 조정. `none`/`0`/빈값 → 만료 없이 영구 상주(반응성 우선). 트레이드오프: TTL 만료 후 첫 질문은 2GB 재로딩으로 콜드스타트 지연 발생.
 
 > **트레이드오프(실제 긴장)**: T1-3(의존성 마이그레이션)과 T1-2(메모리)는 같은 파일을 건드린다. **마이그레이션을 먼저** 하면 메모리 구현을 신 API(`create_retrieval_chain`) 위에 한 번에 작성 → 재작업 회피. 단, 마이그레이션은 회귀 위험이 있으므로 **T0로 평가 하니스(T2-2)의 최소판을 먼저 깔고** 진행하는 것을 권장(아래 시퀀싱 참조).
 
