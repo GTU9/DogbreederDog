@@ -26,6 +26,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
+# --evaluate 단독 실행 시에도 .env(OPENAI_API_KEY)를 로드 (ragas 자체 LLM/임베딩이 사용)
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(os.path.join(ROOT, ".env"))
+except Exception:  # noqa: BLE001
+    pass
+
 
 def _load_cases(path):
     with open(path, "r", encoding="utf-8") as f:
