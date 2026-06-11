@@ -4,6 +4,8 @@
 streamlit>=1.28.0,<2
 python-dotenv>=1.0.0
 openai>=1.30.0,<2
+# 대화 기록 세션 식별(sessionStorage) — F5 유지, 탭 닫으면 휘발
+streamlit-js-eval>=0.1.7
 
 # 현재 코드의 import 경로(langchain_community.* / langchain_core.*)와 맞춘 조합
 # T1-3: app.py / QA_bot.py 는 langchain.* (deprecated) 대신 langchain_community.* 사용.

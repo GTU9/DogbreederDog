@@ -16,6 +16,16 @@ services:
       - SENTENCE_TRANSFORMERS_HOME=/app/models/hub
       # 리소스 캐시 TTL: 유휴 시 RAM 해제(NAS 절약). none/0/빈값 → 영구 상주.
       - RESOURCE_CACHE_TTL=${RESOURCE_CACHE_TTL:-1h}
+      # ── T2 기능 토글 (.env 에서 0/1 로 조정, 재빌드 불필요) ──
+      # 하이브리드 검색(BM25+dense). 0 → dense-only
+      - USE_HYBRID=${USE_HYBRID:-1}
+      # 리랭커(bge-reranker-v2-m3, 상시 RAM ~2GB). NAS RAM 부족 시 0
+      - USE_RERANKER=${USE_RERANKER:-1}
+      # 범위 외(개 이외) 질문 가드. 질문당 LLM 분류 1회 추가 → 비용 민감 시 0
+      - ENABLE_OOS_GUARD=${ENABLE_OOS_GUARD:-1}
+      # 검색 폭: 최종 문서 수 / 재정렬 전 후보 수
+      - RETRIEVE_K=${RETRIEVE_K:-3}
+      - FETCH_K=${FETCH_K:-10}
     volumes:
       - ./models:/app/models
       - ./data:/app/data
