@@ -15,6 +15,9 @@ langchain-community==0.0.38
 
 faiss-cpu>=1.8.0
 sentence-transformers>=2.6.0
+# NAS(AVX 미지원 CPU, SSE4.2)에서 transformers 5.11.0이 Illegal instruction 크래시
+# → 동일 환경에서 정상 동작이 확인된 5.9.0으로 고정 (구이미지/신이미지 버전 비교로 특정)
+transformers==5.9.0
 tiktoken>=0.7.0
 
 # T2-1: 하이브리드 검색(BM25 + dense) — BM25Retriever 런타임 의존성
