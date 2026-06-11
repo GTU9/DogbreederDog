@@ -376,6 +376,22 @@ with st.container():
             st.markdown(bot_bubble_html(msg["content"]), unsafe_allow_html=True)
             render_sources(msg.get("sources"))
 
+# 답변 완료(rerun) 후 마지막 말풍선으로 자동 스크롤.
+# 스크립트에 메시지 수를 넣어 내용을 매번 다르게 함(동일 HTML이면 iframe이 재실행되지 않음).
+if messages:
+    components.html(
+        f"""
+        <script>
+        /* n={len(messages)} */
+        const lines = window.parent.document.querySelectorAll('.chat-line');
+        if (lines.length) {{
+            lines[lines.length - 1].scrollIntoView({{behavior: 'smooth', block: 'end'}});
+        }}
+        </script>
+        """,
+        height=0,
+    )
+
 
 # 입력 받기
 user_input = st.chat_input("질문을 입력하세요...")
