@@ -442,7 +442,7 @@ if user_input:
         bot_bubble_html(answer, profile_b64=bot_profile), unsafe_allow_html=True
     )
 
-    logger.info(f"답변: {answer[:100]}{'...' if len(answer) > 100 else ''}")
+    logger.info(f"답변: {answer}")
 
     # 3) 출처(제목 링크, T2-4) 렌더 후 최종 메시지 저장
     sources = build_sources(docs)
