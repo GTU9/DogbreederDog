@@ -7,15 +7,14 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# requirements 먼저 복사 (레이어 캐시 활용)
-COPY requirements.txt .
-
-# 1단계: requirements.txt 설치 (torch 제외 - 아래에서 별도 설치)
-RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
-
-# 2단계: NAS(CPU only) - requirements.txt의 torch를 덮어써서 v2.6+ 보장
+# 1단계: torch(CPU) 먼저 설치 — 가장 무겁고 거의 변하지 않으므로 별도 레이어로 캐시.
+#   requirements.txt 가 바뀌어도 이 레이어는 재빌드/재업로드되지 않음.
 RUN pip install --no-cache-dir torch==2.6.0+cpu torchvision==0.21.0+cpu \
-    --index-url https://download.pytorch.org/whl/cpu
+    --extra-index-url https://download.pytorch.org/whl/cpu
+
+# 2단계: 나머지 의존성 — torch>=2.0.0 요구는 위 2.6.0+cpu 로 이미 충족되어 재설치되지 않음(이중 설치 제거)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
 # 앱 소스 복사 (models/, testvenv/ 제외는 .dockerignore에서 처리)
 COPY . .
