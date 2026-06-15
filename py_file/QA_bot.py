@@ -295,11 +295,15 @@ def answer_stream(question, chat_history, resources):
 
     범위 외(개 이외) 질문은 검색/LLM 없이 고정 안내를 반환(T2-3).
     그 외에는 history-aware 검색 후 답변 LLM 1회(스트리밍)로 생성한다.
+
+    중요: 범위 판단(is_in_scope)은 반드시 대화 맥락으로 재작성한 standalone 질문에 대해
+    수행한다. 후속 질문("그 중에 제일 위험한 건?")은 단독으로 보면 개 단서가 없어
+    잘못 거절되므로, contextualize → is_in_scope 순서를 지킨다.
     """
-    if not is_in_scope(question, resources):
+    standalone_q = contextualize_question(question, chat_history, resources)
+    if not is_in_scope(standalone_q, resources):
         return [], _static_stream(OOS_RESPONSE)
 
-    standalone_q = contextualize_question(question, chat_history, resources)
     docs = adaptive_retrieve(standalone_q, resources)
     stream = resources["answer_chain"].stream(
         {"context": docs, "chat_history": chat_history, "input": question}
