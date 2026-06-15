@@ -16,6 +16,10 @@ crawling_kinship.ipynb
 # 테스트 실행 산출물(로그/결과) — 입력 data/eval/testcases.json 은 추적 유지
 data/eval/*.txt
 data/eval/*.csv
+# 캡처 스크래치(작업본) — README 정본은 img/screenshots/ 에 보관
+data/eval/shots/
+# 캡처 자동화 도구(개인 배포 도메인 의존) — 저장소에 포함하지 않음
+scripts/capture_features.py
 
 # 런타임 로그 — 도커 볼륨(./data 마운트)에만 남기고 git 추적 안 함
 data/logs/
