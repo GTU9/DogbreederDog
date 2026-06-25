@@ -2,6 +2,9 @@
 testvenv/
 models/
 
+# 프로젝트 문서
+docs/*
+
 data/ksi/Audio/*.mp3
 # data/Text/*
 # data/Json/*
